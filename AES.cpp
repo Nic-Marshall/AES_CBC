@@ -20,12 +20,11 @@ uint8_t gf_triple(uint8_t num) {
 
 uint8_t gf_multiply(uint8_t num0, uint8_t num1) {
     uint8_t result = 0;
-    while(/*num0 && */num1) {
+    while(num1) {
         if (num1 & 1) {
             result ^= num0;
         }
         num1 >>= 1;
-        // num0 = num0 & 1 ? num0 << 1 : (num0 << 1) ^ 0x1b;
         num0 = num0 << 1 ^ (num0 & 0x80 ? 0x1B : 0x00);
     }
     return result;
@@ -137,9 +136,11 @@ void AES::mix_step() {
     this->encrypted.swap(mixed);
 }
 
+// This step shits itself on round 8 for some unknown reason, but only if I use AES::encrypt() instead of manually re-writing
+// the function in main because yes
 void AES::key_step(int i) {
     for(int j = 0; j < 16; j++){
-        this->encrypted[j] ^= this->key[j + 16 * i];
+        this->encrypted[j] ^= this->schedule[j + 16 * i];
     }
 }
 
@@ -170,7 +171,7 @@ void AES::inv_mix_step() {
 
 void AES::inv_key_step(int i) {
     for(int j = 0; j < 16; j++){
-        this->decrypted[j] ^= this->key[j + 16 * i];
+        this->decrypted[j] ^= this->schedule[j + 16 * i];
     }
 }
 
@@ -179,7 +180,7 @@ void AES::encrypt(uint8_t Data[], uint8_t Key[], int Key_size, int Data_size) {
     this->key_size = Key_size;
     this->data = std::vector<uint8_t>(Data, Data + Data_size / 8);
     this->data_size = Data_size;
-    this->encrypted = std::vector<uint8_t>(this->data.begin(), this->data.end());;
+    this->encrypted = std::vector<uint8_t>(this->data);;
     int rounds;
     switch(this->key_size) {
         case 128:
@@ -199,7 +200,7 @@ void AES::encrypt(uint8_t Data[], uint8_t Key[], int Key_size, int Data_size) {
     }
 
     this->key_step(0);
-    for(int i = 1; i < rounds - 1; i++) {
+    for(int i = 1; i < rounds; i++) {
         this->substitute_step();
         this->shift_step();
         this->mix_step();
@@ -211,7 +212,7 @@ void AES::encrypt(uint8_t Data[], uint8_t Key[], int Key_size, int Data_size) {
 }
 
 void AES::decrypt() {
-    this->decrypted = std::vector<uint8_t>(this->encrypted.begin(), this->encrypted.end());
+    this->decrypted = std::vector<uint8_t>(this->encrypted);
     int rounds;
     switch(this->key_size) {
         case 128:

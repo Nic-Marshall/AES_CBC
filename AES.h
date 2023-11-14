@@ -14,6 +14,7 @@ uint8_t  gf_multiply(uint8_t num0, uint8_t num1);
 
 class AES {
 private:
+    // public:
     std::vector<uint8_t> schedule;
     std::vector<uint8_t> data;
     std::vector<uint8_t> key;
@@ -30,8 +31,6 @@ private:
     uint8_t times_0D[256]{};
     int key_size;
     int data_size;
-public:
-
     void schedule_same_round();
     void schedule_new_round(int i);
     void genSchedule_128();
@@ -47,7 +46,7 @@ public:
     void inv_mix_step();
     void key_step(int i);
     void inv_key_step(int i);
-//public:
+public:
     void encrypt(uint8_t data[], uint8_t key[], int Key_size, int Data_size);
     void decrypt();
     void setData(uint8_t d[], int s);
