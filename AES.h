@@ -8,13 +8,10 @@
 #include <memory>
 #include <vector>
 
-// uint8_t gf_double(uint8_t num);
-// uint8_t gf_triple(uint8_t num);
 uint8_t  gf_multiply(uint8_t num0, uint8_t num1);
 
 class AES {
 private:
-    // public:
     std::vector<uint8_t> schedule;
     std::vector<uint8_t> data;
     std::vector<uint8_t> key;
@@ -49,9 +46,6 @@ private:
 public:
     void encrypt(uint8_t data[], uint8_t key[], int Key_size, int Data_size);
     void decrypt();
-    void setData(uint8_t d[], int s);
-    void setKey(uint8_t k[], int s);
-    void debugDecrypt();
     AES();
 };
 
