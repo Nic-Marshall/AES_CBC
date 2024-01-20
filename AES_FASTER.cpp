@@ -69,12 +69,15 @@ uint8_t AES_FASTER::gf_multiply(uint8_t lhs, uint8_t rhs) {
 }
 
 void AES_FASTER::step_substitute(uint8_t *block_start) {
+    //  No clever things to do here, gotta go byte by byte
+    //  Could cast things to larger data-types but the memory cost of the sub-table goes up exponentially
     for (uint8_t i = 0; i < 16; i++) {
         block_start[i] = lt_sub_box[block_start[i]];
     }
 }
 
 void AES_FASTER::step_shift(uint8_t *block_start) {
+    //  In place swaps to do the shifting operation
     std::swap(block_start[1], block_start[5]);
     std::swap(block_start[5], block_start[9]);
     std::swap(block_start[9], block_start[13]);
@@ -108,7 +111,6 @@ void AES_FASTER::step_mix_columns(uint8_t *block_start) {
                       lt_times_2[block_start[2 + 4 * i]] ^ lt_times_3[block_start[3 + 4 * i]];
         new_word[3] = lt_times_3[block_start[0 + 4 * i]] ^ block_start[1 + 4 * i] ^
                       block_start[2 + 4 * i] ^ lt_times_2[block_start[3 + 4 * i]];
-        // std::swap_ranges(block_start + 4 * i, block_start + 4 + 4 * i, new_word);
         *(uint32_t *) (block_start + 4 * i) = *(uint32_t *) new_word;
     }
 }
@@ -139,9 +141,6 @@ void AES_FASTER::step_shift_inv(uint8_t *block_start) {
 
 void AES_FASTER::step_mix_columns_inv(uint8_t *block_start) {
     uint8_t new_word[4];
-    /*
-     * See step_mix_columns for notes
-     * */
     for (uint8_t i = 0; i < 4; i++) {
         new_word[0] = lt_times_14[block_start[0 + 4 * i]] ^ lt_times_11[block_start[1 + 4 * i]] ^
                       lt_times_13[block_start[2 + 4 * i]] ^ lt_times_9[block_start[3 + 4 * i]];
@@ -151,7 +150,6 @@ void AES_FASTER::step_mix_columns_inv(uint8_t *block_start) {
                       lt_times_14[block_start[2 + 4 * i]] ^ lt_times_11[block_start[3 + 4 * i]];
         new_word[3] = lt_times_11[block_start[0 + 4 * i]] ^ lt_times_13[block_start[1 + 4 * i]] ^
                       lt_times_9[block_start[2 + 4 * i]] ^ lt_times_14[block_start[3 + 4 * i]];
-        // std::swap_ranges(block_start + 4 * i, block_start + 4 + 4 * i, new_word);
         *(uint32_t *) (block_start + 4 * i) = *(uint32_t *) new_word;
     }
 }
@@ -224,18 +222,3 @@ uint8_t *AES_FASTER::decrypt(uint8_t *key, uint8_t *data, int key_size, int data
 AES_FASTER::AES_FASTER() {
     initialize_lookup_tables();
 }
-
-
-/*
- * Attempt to do funne pointer shenanigans with the schedule generation for new rounds BUT
- * Endianness does matter here ¯\_(ツ)_/¯
-
-#define ROTL32(x, shift) ((uint32_t) ((x) << (shift)) | ((x) >> (32 - (shift))))
-
-*(word_pointer + i) = ROTL32(*(word_pointer + i - 1), 8);
-for (int j = 0; i < 4; i++) {
-    *(byte_pointer + 4 * i + j - 4) = lt_sub_box[*(byte_pointer + 4 * i + j - 4)];
-}
-
-
-*/
