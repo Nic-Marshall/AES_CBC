@@ -32,7 +32,7 @@ int main() {
                      0x03, 0x02, 0x01, 0x00};
     auto testval = &data2;
     aes.encrypt(data, key, 128, 128);
-    aes2.encrypt(key2, data2, 128, 128, nullptr);
+    aes2.encrypt(key2, data2, 128, 128, nullptr); // Validated
     aes.decrypt();
     aes2.decrypt(key2, data2, 128, 128, nullptr);
 

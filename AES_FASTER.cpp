@@ -103,11 +103,11 @@ void AES_FASTER::step_mix_columns(uint8_t *block_start) {
         new_word[0] = lt_times_2[block_start[0 + 4 * i]] ^ lt_times_3[block_start[1 + 4 * i]] ^
                       block_start[2 + 4 * i] ^ block_start[3 + 4 * i];
         new_word[1] = block_start[0 + 4 * i] ^ lt_times_2[block_start[1 + 4 * i]] ^
-                      lt_times_3[block_start[2 + 4 * i]] + block_start[3 + 4 * i];
+                      lt_times_3[block_start[2 + 4 * i]] ^ block_start[3 + 4 * i];
         new_word[2] = block_start[0 + 4 * i] ^ block_start[1 + 4 * i] ^
                       lt_times_2[block_start[2 + 4 * i]] ^ lt_times_3[block_start[3 + 4 * i]];
         new_word[3] = lt_times_3[block_start[0 + 4 * i]] ^ block_start[1 + 4 * i] ^
-                      block_start[2 + 4 * i] + lt_times_2[block_start[3 + 4 * i]];
+                      block_start[2 + 4 * i] ^ lt_times_2[block_start[3 + 4 * i]];
         // std::swap_ranges(block_start + 4 * i, block_start + 4 + 4 * i, new_word);
         *(uint32_t *) (block_start + 4 * i) = *(uint32_t *) new_word;
     }
@@ -157,8 +157,8 @@ void AES_FASTER::step_mix_columns_inv(uint8_t *block_start) {
 }
 
 void AES_FASTER::step_add_key_inv(uint8_t *block_start, int round) {
-    *(uint64_t *) block_start ^= *(uint64_t *) (schedule + schedule_size - 16 * round);
-    *((uint64_t *) block_start + 1) ^= *((uint64_t *) (schedule + schedule_size - 16 * round) + 1);
+    *(uint64_t *) block_start ^= *(uint64_t *) (schedule + schedule_size * 4 - 16 * round - 16);
+    *((uint64_t *) block_start + 1) ^= *((uint64_t *) (schedule + schedule_size * 4 - 16 * round - 16) + 1);
 }
 
 void AES_FASTER::generate_key_schedule(const uint8_t *key, int key_size) {
@@ -193,7 +193,7 @@ uint8_t *AES_FASTER::encrypt(uint8_t *key, uint8_t *data, int key_size, int data
         step_substitute(data); // Validated
         step_shift(data); // Validated
         step_mix_columns(data);
-        step_add_key(data, round);
+        step_add_key(data, round); // Validated
     }
     step_substitute(data);
     step_shift(data);
@@ -207,7 +207,7 @@ uint8_t *AES_FASTER::decrypt(uint8_t *key, uint8_t *data, int key_size, int data
 
     uint8_t rounds = this->schedule_size / 4 - 1;
 
-    step_add_key_inv(data, 0);
+    step_add_key_inv(data, 0); // WRONG
     for (int round = 1; round < rounds; round++) {
         step_shift_inv(data);
         step_substitute_inv(data);
@@ -238,4 +238,4 @@ for (int j = 0; i < 4; i++) {
 }
 
 
- */
+*/
