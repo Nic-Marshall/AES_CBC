@@ -30,11 +30,10 @@ int main() {
                      0x11, 0x10, 0x09, 0x08,
                      0x07, 0x06, 0x05, 0x04,
                      0x03, 0x02, 0x01, 0x00};
-    auto testval = &data2;
     aes.encrypt(data, key, 128, 128);
-    aes2.encrypt(key2, data2, 128, 128, nullptr); // Validated
+    aes2.encrypt(key2, data2, sizeof(key2), sizeof(data2), nullptr);
     aes.decrypt();
-    aes2.decrypt(key2, data2, 128, 128, nullptr);
+    aes2.decrypt(key2, data2, sizeof(key2), sizeof(data2), nullptr);
 
     int debug = 0;
     return 0;

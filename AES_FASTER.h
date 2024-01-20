@@ -37,6 +37,8 @@ private:
     //  Helper functions
     static uint8_t gf_multiply(uint8_t lhs, uint8_t rhs);
 
+    static void block_xor(uint8_t* block, const uint8_t* addend);
+
     void generate_key_schedule(const uint8_t *key, int key_size);
 
     //  Encryption functions

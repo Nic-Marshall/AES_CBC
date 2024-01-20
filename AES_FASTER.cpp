@@ -68,6 +68,11 @@ uint8_t AES_FASTER::gf_multiply(uint8_t lhs, uint8_t rhs) {
     return product;
 }
 
+void AES_FASTER::block_xor(uint8_t *block, const uint8_t *addend) {
+    *(uint64_t *) block ^= *(uint64_t *) (addend);
+    *((uint64_t *) block + 1) ^= *((uint64_t *) (addend) + 1);
+}
+
 void AES_FASTER::step_substitute(uint8_t *block_start) {
     //  No clever things to do here, gotta go byte by byte
     //  Could cast things to larger data-types but the memory cost of the sub-table goes up exponentially
@@ -116,8 +121,7 @@ void AES_FASTER::step_mix_columns(uint8_t *block_start) {
 }
 
 void AES_FASTER::step_add_key(uint8_t *block_start, int round) {
-    *(uint64_t *) block_start ^= *(uint64_t *) (schedule + 16 * round);
-    *((uint64_t *) block_start + 1) ^= *((uint64_t *) (schedule + 16 * round) + 1);
+    block_xor(block_start, schedule + 16 * round);
 }
 
 void AES_FASTER::step_substitute_inv(uint8_t *block_start) {
@@ -155,20 +159,19 @@ void AES_FASTER::step_mix_columns_inv(uint8_t *block_start) {
 }
 
 void AES_FASTER::step_add_key_inv(uint8_t *block_start, int round) {
-    *(uint64_t *) block_start ^= *(uint64_t *) (schedule + schedule_size * 4 - 16 * round - 16);
-    *((uint64_t *) block_start + 1) ^= *((uint64_t *) (schedule + schedule_size * 4 - 16 * round - 16) + 1);
+    block_xor(block_start, schedule + schedule_size * 4 - 16 * round - 16);
 }
 
 void AES_FASTER::generate_key_schedule(const uint8_t *key, int key_size) {
-    this->schedule_size = lt_schedule_sizes[(key_size >> 6) - 1];
+    this->schedule_size = lt_schedule_sizes[(key_size >> 3) - 1];
     auto *word_pointer = (uint32_t *) this->schedule;
     uint8_t *byte_pointer = this->schedule;
 
-    for (int i = 0; i < (key_size >> 3); i++) {
+    for (int i = 0; i < key_size; i++) {
         this->schedule[i] = key[i];
     }
 
-    for (int i = key_size >> 5; i < schedule_size; i++) {
+    for (int i = key_size >> 2; i < schedule_size; i++) {
         if (!(i % 4)) {
             for (int j = 0; j < 4; j++) {
                 *(byte_pointer + 4 * i + j) = lt_sub_box[*(byte_pointer + 4 * i - 4 + (j + 1) % 4)];
@@ -186,16 +189,38 @@ uint8_t *AES_FASTER::encrypt(uint8_t *key, uint8_t *data, int key_size, int data
 
     uint8_t rounds = this->schedule_size / 4 - 1;
 
-    step_add_key(data, 0); // validated
-    for (int round = 1; round < rounds; round++) {
-        step_substitute(data); // Validated
-        step_shift(data); // Validated
-        step_mix_columns(data);
-        step_add_key(data, round); // Validated
+    int block_count = data_size >> 4;
+
+    if(block_count > 1) {
+        block_xor(data, seed_vec);
     }
-    step_substitute(data);
-    step_shift(data);
-    step_add_key(data, rounds);
+
+    for(int block = 0; block < block_count; block++) {
+        step_add_key(data + 16 * block, 0);
+        for (int round = 1; round < rounds; round++) {
+            step_substitute(data + 16 * block);
+            step_shift(data + 16 * block);
+            step_mix_columns(data + 16 * block);
+            step_add_key(data + 16 * block, round);
+        }
+        step_substitute(data + 16 * block);
+        step_shift(data + 16 * block);
+        step_add_key(data + 16 * block, rounds);
+
+        if(block < block_count - 1) {
+            block_xor(data + 16 * block + 16, data + 16 * block);
+        }
+    }
+//    step_add_key(data, 0);
+//    for (int round = 1; round < rounds; round++) {
+//        step_substitute(data);
+//        step_shift(data);
+//        step_mix_columns(data);
+//        step_add_key(data, round);
+//    }
+//    step_substitute(data);
+//    step_shift(data);
+//    step_add_key(data, rounds);
 
     return nullptr;
 }
@@ -205,16 +230,40 @@ uint8_t *AES_FASTER::decrypt(uint8_t *key, uint8_t *data, int key_size, int data
 
     uint8_t rounds = this->schedule_size / 4 - 1;
 
-    step_add_key_inv(data, 0); // WRONG
-    for (int round = 1; round < rounds; round++) {
-        step_shift_inv(data);
-        step_substitute_inv(data);
-        step_add_key_inv(data, round);
-        step_mix_columns_inv(data);
+    int block_count = data_size >> 4;
+
+    //  Start decryption from the final block and work down the block 1
+    for(int block = block_count - 1; block >= 0; block--) {
+        step_add_key_inv(data + 16 * block, 0);
+        for (int round = 1; round < rounds; round++) {
+            step_shift_inv(data + 16 * block);
+            step_substitute_inv(data + 16 * block);
+            step_add_key_inv(data + 16 * block, round);
+            step_mix_columns_inv(data + 16 * block);
+        }
+        step_shift_inv(data + 16 * block);
+        step_substitute_inv(data + 16 * block);
+        step_add_key_inv(data + 16 * block, rounds);
+
+        //  If it isn't block 0, xor the block with the previous encrypted block
+        //  If it is block 0, xor with the seed vector
+        block_xor(data + 16 * block, (block > 0 ? data + 16 * block - 16 : seed_vec));
     }
-    step_shift_inv(data);
-    step_substitute_inv(data);
-    step_add_key_inv(data, rounds);
+
+//    step_add_key_inv(data, 0);
+//    for (int round = 1; round < rounds; round++) {
+//        step_shift_inv(data);
+//        step_substitute_inv(data);
+//        step_add_key_inv(data, round);
+//        step_mix_columns_inv(data);
+//    }
+//    step_shift_inv(data);
+//    step_substitute_inv(data);
+//    step_add_key_inv(data, rounds);
+//
+//    if(block_count > 1) {
+//        block_xor(data, seed_vec);
+//    }
 
     return nullptr;
 }
@@ -222,3 +271,5 @@ uint8_t *AES_FASTER::decrypt(uint8_t *key, uint8_t *data, int key_size, int data
 AES_FASTER::AES_FASTER() {
     initialize_lookup_tables();
 }
+
+
