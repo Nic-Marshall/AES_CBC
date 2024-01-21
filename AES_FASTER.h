@@ -7,12 +7,12 @@
 
 #include <stdint.h>
 
-union block {
+union cipher_block {
     uint8_t bytes[16];
     uint32_t words[4];
     uint64_t dwords[2];
 
-    void operator^=(const block other) {
+    void operator^=(const cipher_block other) {
         this->dwords[0] ^= other.dwords[0];
         this->dwords[1] ^= other.dwords[1];
     }
@@ -45,42 +45,26 @@ private:
 
     //  Helper functions
     static uint8_t gf_multiply(uint8_t lhs, uint8_t rhs);
-    static void block_xor(uint8_t *block_start, const uint8_t *addend);
     void generate_key_schedule(const uint8_t *key, int key_size);
 
     //  Encryption functions
-    static void step_substitute(uint8_t *block_start);
-    static void step_shift(uint8_t *block_start);
-    static void step_mix_columns(uint8_t *block_start);
-    void step_add_key(uint8_t *block_start, int round);
-
-    //  With block unions
-    static void step_substitute(block *block_start);
-    static void step_shift(block *block_start);
-    static void step_mix_columns(block *block_start);
-    void step_add_key(block *block_start, int round);
+    static void step_substitute(cipher_block *block_start);
+    static void step_shift(cipher_block *block_start);
+    static void step_mix_columns(cipher_block *block_start);
+    void step_add_key(cipher_block *block_start, int round);
 
     //  Decryption functions
-    static void step_substitute_inv(uint8_t *block_start);
-    static void step_shift_inv(uint8_t *block_start);
-    static void step_mix_columns_inv(uint8_t *block_start);
-    void step_add_key_inv(uint8_t *block_start, int round);
-
-    //  With block unions
-    static void step_substitute_inv(block *block_start);
-    static void step_shift_inv(block *block_start);
-    static void step_mix_columns_inv(block *block_start);
-    void step_add_key_inv(block *block_start, int round);
+    static void step_substitute_inv(cipher_block *block_start);
+    static void step_shift_inv(cipher_block *block_start);
+    static void step_mix_columns_inv(cipher_block *block_start);
+    void step_add_key_inv(cipher_block *block_start, int round);
 
 public:
     uint8_t *encrypt(uint8_t *key, uint8_t *data,
-                     int key_size, int data_size, uint8_t *seed_vec);
+                     int key_size, int data_size, const uint8_t *seed_vec);
 
     uint8_t *decrypt(uint8_t *key, uint8_t *data,
-                     int key_size, int data_size, uint8_t *seed_vec);
-    uint8_t *decrypt_test(uint8_t *key, uint8_t *data,
-                          int key_size, int data_size, uint8_t *seed_vec);
-    uint8_t *encrypt_test(uint8_t *key, uint8_t *data_, int key_size, int data_size, uint8_t *seed_vec);
+                     int key_size, int data_size, const uint8_t *seed_vec);
 
     AES_FASTER();
 };

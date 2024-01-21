@@ -61,8 +61,8 @@ int main() {
     aes.decrypt();
     aes2.decrypt(key2, data2b, sizeof(key2), sizeof(data2b), seed_vec);
 
-    aes2.encrypt_test(key3, data3, sizeof(key3), sizeof(data3), seed_vec);
-    aes2.decrypt_test(key3, data3, sizeof(key3), sizeof(data3), seed_vec);
+    aes2.encrypt(key3, data3, sizeof(key3), sizeof(data3), seed_vec);
+    aes2.decrypt(key3, data3, sizeof(key3), sizeof(data3), seed_vec);
 
     int debug = 0;
     return 0;
