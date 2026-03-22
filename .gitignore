@@ -3,5 +3,4 @@
 *.out
 *.obj
 *.o
-/cmake-build-debug/*
-/cmake-build-release/*
+/cmake-build-*/
