@@ -8,8 +8,7 @@
  * */
 #include <fstream>
 #include <chrono>
-#include "AES.h"
-#include "AES_FASTER.h"
+#include "AES_CBC/AES_CBC.h"
 
 #define BPMS_TO_MBPS 1000000 / 1048576
 
@@ -17,8 +16,7 @@
  * Validate the AES implementation by encrypting a single block of data.
  * */
 void aes_validation() {
-    AES aes = AES();
-    AES_FASTER aes2 = AES_FASTER();
+    AES_CBC aes = AES_CBC();
 
     uint8_t data[] = {0x00, 0x01, 0x02, 0x03,
                       0x04, 0x05, 0x06, 0x07,
@@ -62,13 +60,9 @@ void aes_validation() {
                           0x15, 0x16, 0x17, 0x18,
                           0x19, 0x20, 0x21, 0x22,
                           0x23, 0x24, 0x25, 0x26};
-    aes.encrypt(data, key, 128, 128);
-    aes2.encrypt(key2, data2b, sizeof(key2), sizeof(data2b), seed_vec);
-    aes.decrypt();
-    aes2.decrypt(key2, data2b, sizeof(key2), sizeof(data2b), seed_vec);
 
-    aes2.encrypt(key3, data3, sizeof(key3), sizeof(data3), seed_vec);
-    aes2.decrypt(key3, data3, sizeof(key3), sizeof(data3), seed_vec);
+    aes.encrypt(key, data, sizeof(key), sizeof(data), seed_vec);
+    aes.decrypt(key2, data2b, sizeof(key2), sizeof(data2b), seed_vec);
 
     int debug = 0;
 }
@@ -89,9 +83,9 @@ uint8_t *allocate_file_array(unsigned long file_size, unsigned long file_size_ad
 }
 
 void file_encryption_test() {
-    std::string filepath = "C:/Users/Nicho/OneDrive/Desktop/Random Crap/a";
-    std::string encrypted_path = "C:/Users/Nicho/OneDrive/Desktop/Random Crap/b";
-    std::string decrypted_path = "C:/Users/Nicho/OneDrive/Desktop/Random Crap/c";
+    std::string filepath = "C:/Windows/System32/cmd.exe";
+    std::string encrypted_path = "C:/temp/encrypted";
+    std::string decrypted_path = "C:/tmp/cmd.exe";
 
     std::fstream file_read;
     std::fstream file_write;
@@ -114,7 +108,7 @@ void file_encryption_test() {
                      0x07, 0x06, 0x05, 0x04,
                      0x03, 0x02, 0x01, 0x00};
 
-    AES_FASTER aes = AES_FASTER();
+    AES_CBC aes = AES_CBC();
 
     auto pre_encrypt = std::chrono::high_resolution_clock::now();
     aes.encrypt(key, data, sizeof(key), file_size_adjusted, key);
@@ -194,7 +188,7 @@ void file_encrypt() {
         return;
     }
 
-    AES_FASTER aes = AES_FASTER();
+    AES_CBC aes = AES_CBC();
     aes.stream_encrypt(key_bytes, &input, &output, key.length()/2, iv_bytes);
 
     input.close();
@@ -241,7 +235,7 @@ void file_decrypt() {
         return;
     }
 
-    AES_FASTER aes = AES_FASTER();
+    AES_CBC aes = AES_CBC();
     aes.stream_decrypt(key_bytes, &input, &output, key.length()/2, iv_bytes);
 
     input.close();
@@ -249,9 +243,9 @@ void file_decrypt() {
 }
 
 void streamtest() {
-    std::string filepath = "C:/Users/Nicho/OneDrive/Desktop/Random Crap/a";
-    std::string encrypted_path = "C:/Users/Nicho/OneDrive/Desktop/Random Crap/b";
-    std::string decrypted_path = "C:/Users/Nicho/OneDrive/Desktop/Random Crap/c";
+    std::string filepath = "C:/Windows/System32/cmd.exe";
+    std::string encrypted_path = "C:/temp/encrypted";
+    std::string decrypted_path = "C:/temp/cmd.exe";
 
     std::fstream file_read;
 
@@ -267,7 +261,7 @@ void streamtest() {
                      0x07, 0x06, 0x05, 0x04,
                      0x03, 0x02, 0x01, 0x00};
 
-    AES_FASTER aes = AES_FASTER();
+    AES_CBC aes = AES_CBC();
 
 
     auto pre_encrypt = std::chrono::high_resolution_clock::now();

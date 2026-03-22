@@ -2,8 +2,8 @@
 // Created by Nicho on 1/18/2024.
 //
 
-#ifndef LEARNINGPROJECTS_AES_FASTER_H
-#define LEARNINGPROJECTS_AES_FASTER_H
+#ifndef LEARNINGPROJECTS_AES_CBC_H
+#define LEARNINGPROJECTS_AES_CBC_H
 
 #include <stdint.h>
 #include <fstream>
@@ -20,7 +20,7 @@ union cipher_block {
 
 };
 
-class AES_FASTER {
+class AES_CBC {
 private:
     //  Place to put the schedule and stuff
     uint8_t schedule[240]{};
@@ -80,8 +80,8 @@ public:
     void stream_encrypt(uint8_t *key, std::fstream *stream_read, std::fstream *stream_write,
                                     int key_size, const uint8_t *initialization_vector);
 
-    AES_FASTER();
+    AES_CBC();
 };
 
 
-#endif //LEARNINGPROJECTS_AES_FASTER_H
+#endif //LEARNINGPROJECTS_AES_CBC_H
