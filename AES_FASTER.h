@@ -6,6 +6,7 @@
 #define LEARNINGPROJECTS_AES_FASTER_H
 
 #include <stdint.h>
+#include <fstream>
 
 union cipher_block {
     uint8_t bytes[16];
@@ -24,6 +25,7 @@ private:
     //  Place to put the schedule and stuff
     uint8_t schedule[240]{};
     uint8_t schedule_size{};
+    cipher_block *schedule_block{};
 
     //  Lookup tables
     static uint8_t lt_times_2[256];
@@ -45,26 +47,38 @@ private:
 
     //  Helper functions
     static uint8_t gf_multiply(uint8_t lhs, uint8_t rhs);
-    void generate_key_schedule(const uint8_t *key, int key_size);
 
     //  Encryption functions
     static void step_substitute(cipher_block *block_start);
     static void step_shift(cipher_block *block_start);
+    static void step_shift_testing(cipher_block *block_start);
     static void step_mix_columns(cipher_block *block_start);
+    static void step_mix_columns_testing(cipher_block *block_start);
+    static void step_mix_columns_simdeez(cipher_block *block_start);
     void step_add_key(cipher_block *block_start, int round);
 
     //  Decryption functions
     static void step_substitute_inv(cipher_block *block_start);
     static void step_shift_inv(cipher_block *block_start);
     static void step_mix_columns_inv(cipher_block *block_start);
+    static void step_shift_inv_testing(cipher_block *block_start);
+    static void step_mix_columns_inv_testing(cipher_block *block_start);
     void step_add_key_inv(cipher_block *block_start, int round);
 
 public:
     uint8_t *encrypt(uint8_t *key, uint8_t *data,
-                     int key_size, int data_size, const uint8_t *seed_vec);
-
+                     int key_size, unsigned long data_size, const uint8_t *seed_vec);
     uint8_t *decrypt(uint8_t *key, uint8_t *data,
-                     int key_size, int data_size, const uint8_t *seed_vec);
+                     int key_size, unsigned long data_size, const uint8_t *seed_vec);
+    void stream_encrypt_test(uint8_t *key, std::string &input_path, std::string &output_path,
+                                    int key_size, const uint8_t *initialization_vector);
+    void stream_decrypt_test(uint8_t *key, std::string &input_path, std::string &output_path,
+                        int key_size, const uint8_t *initialization_vector);
+    void generate_key_schedule(const uint8_t *key, int key_size);
+    void stream_decrypt(uint8_t *key, std::fstream *stream_read, std::fstream *stream_write,
+                                    int key_size, const uint8_t *initialization_vector);
+    void stream_encrypt(uint8_t *key, std::fstream *stream_read, std::fstream *stream_write,
+                                    int key_size, const uint8_t *initialization_vector);
 
     AES_FASTER();
 };
