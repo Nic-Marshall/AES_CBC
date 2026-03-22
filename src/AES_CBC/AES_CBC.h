@@ -1,11 +1,11 @@
 //
-// Created by Nicho on 1/18/2024.
+// Created by Nic on 1/18/2024.
 //
 
-#ifndef LEARNINGPROJECTS_AES_CBC_H
-#define LEARNINGPROJECTS_AES_CBC_H
+#ifndef AES_CBC_H
+#define AES_CBC_H
 
-#include <stdint.h>
+#include <cstdint>
 #include <fstream>
 
 union cipher_block {
@@ -51,37 +51,34 @@ private:
     //  Encryption functions
     static void step_substitute(cipher_block *block_start);
     static void step_shift(cipher_block *block_start);
-    static void step_shift_testing(cipher_block *block_start);
     static void step_mix_columns(cipher_block *block_start);
-    static void step_mix_columns_testing(cipher_block *block_start);
-    static void step_mix_columns_simdeez(cipher_block *block_start);
     void step_add_key(cipher_block *block_start, int round);
 
     //  Decryption functions
     static void step_substitute_inv(cipher_block *block_start);
     static void step_shift_inv(cipher_block *block_start);
     static void step_mix_columns_inv(cipher_block *block_start);
-    static void step_shift_inv_testing(cipher_block *block_start);
-    static void step_mix_columns_inv_testing(cipher_block *block_start);
     void step_add_key_inv(cipher_block *block_start, int round);
 
 public:
-    uint8_t *encrypt(uint8_t *key, uint8_t *data,
-                     int key_size, unsigned long data_size, const uint8_t *seed_vec);
-    uint8_t *decrypt(uint8_t *key, uint8_t *data,
-                     int key_size, unsigned long data_size, const uint8_t *seed_vec);
+    void encrypt(uint8_t *key, uint8_t *data_,
+                 int key_size, unsigned long data_size, const uint8_t *seed_vec);
+    void encrypt(uint8_t *data_, unsigned long data_size, const uint8_t *seed_vec);
+    void decrypt(uint8_t *key, uint8_t *data_,
+                 int key_size, unsigned long data_size, const uint8_t *seed_vec);
+    void decrypt(uint8_t *data_, unsigned long data_size, const uint8_t *seed_vec);
     void stream_encrypt_test(uint8_t *key, std::string &input_path, std::string &output_path,
                                     int key_size, const uint8_t *initialization_vector);
     void stream_decrypt_test(uint8_t *key, std::string &input_path, std::string &output_path,
                         int key_size, const uint8_t *initialization_vector);
     void generate_key_schedule(const uint8_t *key, int key_size);
-    void stream_decrypt(uint8_t *key, std::fstream *stream_read, std::fstream *stream_write,
-                                    int key_size, const uint8_t *initialization_vector);
-    void stream_encrypt(uint8_t *key, std::fstream *stream_read, std::fstream *stream_write,
-                                    int key_size, const uint8_t *initialization_vector);
+    void stream_decrypt(uint8_t *key, std::ifstream *stream_read, std::ofstream *stream_write,
+                        int key_size, const uint8_t *initialization_vector);
+    void stream_encrypt(uint8_t *key, std::ifstream *stream_read, std::ofstream *stream_write,
+                        int key_size, const uint8_t *initialization_vector);
 
     AES_CBC();
 };
 
 
-#endif //LEARNINGPROJECTS_AES_CBC_H
+#endif //AES_CBC_H

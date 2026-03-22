@@ -1,12 +1,11 @@
 //
-// Created by Nicho on 1/18/2024.
+// Created by Nic on 1/18/2024.
 //
 
 #include "AES_CBC.h"
 #include <algorithm>
 #include <fstream>
 #include <cstring>
-//   #include "time_accumulator.h"
 
 #define ROTL8(x, shift) ((uint8_t) ((x) << (shift)) | ((x) >> (8 - (shift))))
 
@@ -72,7 +71,7 @@ uint8_t AES_CBC::gf_multiply(uint8_t lhs, uint8_t rhs) {
 }
 
 void AES_CBC::generate_key_schedule(const uint8_t *key, int key_size) {
-    this->schedule_size = this->lt_schedule_sizes[(key_size >> 3) - 1];
+    this->schedule_size = AES_CBC::lt_schedule_sizes[(key_size >> 3) - 1];
     auto *word_pointer = (uint32_t *) this->schedule;
     uint8_t *byte_pointer = this->schedule;
 
@@ -94,70 +93,62 @@ void AES_CBC::generate_key_schedule(const uint8_t *key, int key_size) {
     this->schedule_block = (cipher_block*)&this->schedule;
 }
 
-uint8_t *AES_CBC::encrypt(uint8_t *key, uint8_t *data_, int key_size, unsigned long data_size, const uint8_t *seed_vec) {
+void AES_CBC::encrypt(uint8_t *key, uint8_t *data_, int key_size, unsigned long data_size, const uint8_t *seed_vec) {
     this->generate_key_schedule(key, key_size);
-    auto data = (cipher_block *) data_;
-    //  time_accumulator timer;
+    this->encrypt(data_, data_size, seed_vec);
+}
 
-//    timer.add_new_tracker();    //  Key -> 0 (slow)
-//    timer.add_new_tracker();    //  Sub -> 1 (fast)
-//    timer.add_new_tracker();    //  Shi -> 2 (VERY slow)
-//    timer.add_new_tracker();    //  Mix -> 3 (slow)
+void AES_CBC::decrypt(uint8_t *key, uint8_t *data_, int key_size, unsigned long data_size, const uint8_t *seed_vec) {
+    this->generate_key_schedule(key, key_size);
+    this->decrypt(data_, data_size, seed_vec);
+}
+
+void AES_CBC::encrypt(uint8_t *data_, unsigned long data_size, const uint8_t *seed_vec) {
+    auto data = (cipher_block *) data_;
 
     uint8_t rounds = this->schedule_size / 4 - 1;
 
-    int block_count = data_size >> 4;
+    unsigned long block_count = data_size >> 4;
 
     if (block_count > 1) {
         data[0] ^= *(cipher_block *) seed_vec;
     }
-//    timer.timer_start_timing();
 
     for (int block = 0; block < block_count; block++) {
         step_add_key(data + block, 0);
-//        timer.timer_log_time(0);
         for (int round = 1; round < rounds; round++) {
             step_substitute(data + block);
-//            timer.timer_log_time(1);
-            step_shift_testing(data + block);
-//            timer.timer_log_time(2);
-            step_mix_columns_testing(data + block);
-//            timer.timer_log_time(3);
+            step_shift(data + block);
+            step_mix_columns(data + block);
             step_add_key(data + block, round);
-//            timer.timer_log_time(0);
         }
         step_substitute(data + block);
-        step_shift_testing(data + block);
+        step_shift(data + block);
         step_add_key(data + block, rounds);
 
-//        timer.report_times();
-//        timer.timer_start_timing();
         if (block < block_count - 1) {
             data[block + 1] ^= data[block];
         }
     }
-
-    return nullptr;
 }
 
-uint8_t *AES_CBC::decrypt(uint8_t *key, uint8_t *data_, int key_size, unsigned long data_size, const uint8_t *seed_vec) {
-    this->generate_key_schedule(key, key_size);
+void AES_CBC::decrypt(uint8_t *data_, unsigned long data_size, const uint8_t *seed_vec) {
     auto data = (cipher_block *) data_;
 
     uint8_t rounds = this->schedule_size / 4 - 1;
 
-    int block_count = data_size >> 4;
+    unsigned long block_count = data_size >> 4;
 
     //  Start decryption from the final cipher_block and work down the cipher_block 1
     for (int block = block_count - 1; block >= 0; block--) {
         step_add_key_inv(data + block, 0);
         for (int round = 1; round < rounds; round++) {
-            step_shift_inv_testing(data + block);
+            step_shift_inv(data + block);
             step_substitute_inv(data + block);
             step_add_key_inv(data + block, round);
-            step_mix_columns_inv_testing(data + block);
+            step_mix_columns_inv(data + block);
         }
-        step_shift_inv_testing(data + block);
+        step_shift_inv(data + block);
         step_substitute_inv(data + block);
         step_add_key_inv(data + block, rounds);
 
@@ -167,8 +158,6 @@ uint8_t *AES_CBC::decrypt(uint8_t *key, uint8_t *data_, int key_size, unsigned l
             data[block] ^= *(cipher_block *) seed_vec;
         }
     }
-
-    return nullptr;
 }
 
 AES_CBC::AES_CBC() {
@@ -183,19 +172,6 @@ void AES_CBC::step_substitute(cipher_block *block_start) {
 }
 
 void AES_CBC::step_shift(cipher_block *block_start) {
-    std::swap(block_start->bytes[1], block_start->bytes[5]);
-    std::swap(block_start->bytes[5], block_start->bytes[9]);
-    std::swap(block_start->bytes[9], block_start->bytes[13]);
-
-    std::swap(block_start->bytes[2], block_start->bytes[10]);
-    std::swap(block_start->bytes[6], block_start->bytes[14]);
-
-    std::swap(block_start->bytes[3], block_start->bytes[15]);
-    std::swap(block_start->bytes[15], block_start->bytes[11]);
-    std::swap(block_start->bytes[11], block_start->bytes[7]);
-}
-
-void AES_CBC::step_shift_testing(cipher_block *block_start) {
     uint8_t *b = block_start->bytes;
 
     std::swap(b[1], b[5]);
@@ -212,22 +188,6 @@ void AES_CBC::step_shift_testing(cipher_block *block_start) {
 
 void AES_CBC::step_mix_columns(cipher_block *block_start) {
     cipher_block new_word{};
-
-    for (uint8_t i = 0; i < 4; i++) {
-        new_word.bytes[0] = lt_times_2[block_start->bytes[0 + 4 * i]] ^ lt_times_3[block_start->bytes[1 + 4 * i]] ^
-                            block_start->bytes[2 + 4 * i] ^ block_start->bytes[3 + 4 * i];
-        new_word.bytes[1] = block_start->bytes[0 + 4 * i] ^ lt_times_2[block_start->bytes[1 + 4 * i]] ^
-                            lt_times_3[block_start->bytes[2 + 4 * i]] ^ block_start->bytes[3 + 4 * i];
-        new_word.bytes[2] = block_start->bytes[0 + 4 * i] ^ block_start->bytes[1 + 4 * i] ^
-                            lt_times_2[block_start->bytes[2 + 4 * i]] ^ lt_times_3[block_start->bytes[3 + 4 * i]];
-        new_word.bytes[3] = lt_times_3[block_start->bytes[0 + 4 * i]] ^ block_start->bytes[1 + 4 * i] ^
-                            block_start->bytes[2 + 4 * i] ^ lt_times_2[block_start->bytes[3 + 4 * i]];
-        block_start->words[i] = new_word.words[0];
-    }
-}
-
-void AES_CBC::step_mix_columns_testing(cipher_block *block_start) {
-    cipher_block new_word{};
     uint8_t *b = block_start->bytes;
 
     for (uint8_t i = 0; i < 4; i++) {
@@ -243,10 +203,6 @@ void AES_CBC::step_mix_columns_testing(cipher_block *block_start) {
     }
 }
 
-void AES_CBC::step_mix_columns_simdeez(cipher_block *block_start) {
-    
-}
-
 void AES_CBC::step_add_key(cipher_block *block_start, int round) {
     //  biggest time sink is here (probably)
     //  Maybe convert schedule earlier on to remove the typecast shit
@@ -260,19 +216,6 @@ void AES_CBC::step_substitute_inv(cipher_block *block_start) {
 }
 
 void AES_CBC::step_shift_inv(cipher_block *block_start) {
-    std::swap(block_start->bytes[1], block_start->bytes[13]);
-    std::swap(block_start->bytes[13], block_start->bytes[9]);
-    std::swap(block_start->bytes[9], block_start->bytes[5]);
-
-    std::swap(block_start->bytes[2], block_start->bytes[10]);
-    std::swap(block_start->bytes[6], block_start->bytes[14]);
-
-    std::swap(block_start->bytes[3], block_start->bytes[7]);
-    std::swap(block_start->bytes[7], block_start->bytes[11]);
-    std::swap(block_start->bytes[11], block_start->bytes[15]);
-}
-
-void AES_CBC::step_shift_inv_testing(cipher_block *block_start) {
     uint8_t *b = block_start->bytes;
 
     std::swap(b[1], b[13]);
@@ -287,7 +230,7 @@ void AES_CBC::step_shift_inv_testing(cipher_block *block_start) {
     std::swap(b[11], b[15]);
 }
 
-void AES_CBC::step_mix_columns_inv_testing(cipher_block *block_start) {
+void AES_CBC::step_mix_columns_inv(cipher_block *block_start) {
     cipher_block new_word{};
     uint8_t *b = block_start->bytes;
 
@@ -304,40 +247,25 @@ void AES_CBC::step_mix_columns_inv_testing(cipher_block *block_start) {
     }
 }
 
-void AES_CBC::step_mix_columns_inv(cipher_block *block_start) {
-    cipher_block new_word{};
-
-    for (uint8_t i = 0; i < 4; i++) {
-        new_word.bytes[0] = lt_times_14[block_start->bytes[0 + 4 * i]] ^ lt_times_11[block_start->bytes[1 + 4 * i]] ^
-                            lt_times_13[block_start->bytes[2 + 4 * i]] ^ lt_times_9[block_start->bytes[3 + 4 * i]];
-        new_word.bytes[1] = lt_times_9[block_start->bytes[0 + 4 * i]] ^ lt_times_14[block_start->bytes[1 + 4 * i]] ^
-                            lt_times_11[block_start->bytes[2 + 4 * i]] ^ lt_times_13[block_start->bytes[3 + 4 * i]];
-        new_word.bytes[2] = lt_times_13[block_start->bytes[0 + 4 * i]] ^ lt_times_9[block_start->bytes[1 + 4 * i]] ^
-                            lt_times_14[block_start->bytes[2 + 4 * i]] ^ lt_times_11[block_start->bytes[3 + 4 * i]];
-        new_word.bytes[3] = lt_times_11[block_start->bytes[0 + 4 * i]] ^ lt_times_13[block_start->bytes[1 + 4 * i]] ^
-                            lt_times_9[block_start->bytes[2 + 4 * i]] ^ lt_times_14[block_start->bytes[3 + 4 * i]];
-        block_start->words[i] = new_word.words[0];
-    }
-}
-
 void AES_CBC::step_add_key_inv(cipher_block *block_start, int round) {
     *block_start ^= *(this->schedule_block  + this->schedule_size / 4 - round - 1);
 }
 
 void AES_CBC::stream_encrypt_test(uint8_t *key, std::string &input_path, std::string &output_path,
                                   int key_size, const uint8_t *initialization_vector) {
-    //  Goal is to have an encryption function which can receive streamed file data from some source during encryption
-    //  Will want a new streaming class which can hand off data.  Due to streaming it probably won't be continuous
-    //  If it is not continuous, it will need to have some method of indexing into it to grab shit, probably a ring buffer
-    //  The streaming class will hopefully have some means of communicating with the encryption class to keep things going
-    //  Finally, it will need to write to file as stuff is finished and remove items from the ring buffer
     std::fstream file_read;
     std::fstream file_write;
-    uint8_t pad_size = 0;
-    uint16_t data_size = 0;
-    size_t buff_size = 4096;
+    uint8_t pad_size;
+    uint16_t data_size;
+    std::streamsize buff_size = 4096;
     char *buffer = (char*)malloc(buff_size);
+    if(buffer == nullptr) {
+        std::printf("Failed to allocate buffer memory.");
+        return;
+    }
     uint8_t seed_vec[16];
+
+    this->generate_key_schedule(key, key_size);
 
     std::memcpy(seed_vec, initialization_vector, 16);
 
@@ -348,7 +276,7 @@ void AES_CBC::stream_encrypt_test(uint8_t *key, std::string &input_path, std::st
     data_size = file_read.gcount();
 
     while(!file_read.eof()) {
-        this->encrypt(key, (uint8_t*)buffer, key_size, data_size, seed_vec);
+        this->encrypt((uint8_t*)buffer, data_size, seed_vec);
         std::memcpy(seed_vec, buffer + data_size - 16, 16);
         file_write.write(buffer, data_size);
         file_read.read(buffer, data_size);
@@ -357,7 +285,7 @@ void AES_CBC::stream_encrypt_test(uint8_t *key, std::string &input_path, std::st
 
     pad_size = file_write.gcount() % 16;
     std::memset(buffer + data_size, pad_size, pad_size);
-    this->encrypt(key, (uint8_t*)buffer, key_size, data_size + pad_size, seed_vec);
+    this->encrypt((uint8_t*)buffer, data_size + pad_size, seed_vec);
     file_write.write(buffer, data_size + pad_size);
 
     file_read.close();
@@ -369,12 +297,18 @@ void AES_CBC::stream_decrypt_test(uint8_t *key, std::string &input_path, std::st
                                   int key_size, const uint8_t *initialization_vector) {
     std::fstream file_read;
     std::fstream file_write;
-    uint8_t pad_size = 0;
-    uint16_t data_size = 0;
-    size_t buff_size = 4096;
+    uint8_t pad_size;
+    uint16_t data_size;
+    std::streamsize buff_size = 4096;
     char *buffer = (char*)malloc(buff_size);
+    if(buffer == nullptr) {
+        std::printf("Failed to allocate buffer memory.");
+        return;
+    }
     uint8_t seed_vec[16];
     uint8_t next_seed_vec[16];
+
+    this->generate_key_schedule(key, key_size);
 
     std::memcpy(seed_vec, initialization_vector, 16);
 
@@ -386,7 +320,7 @@ void AES_CBC::stream_decrypt_test(uint8_t *key, std::string &input_path, std::st
     std::memcpy(next_seed_vec, buffer + data_size - 16, 16);
 
     while(!file_read.eof()) {
-        this->decrypt(key, (uint8_t*)buffer, key_size, data_size, seed_vec);
+        this->decrypt((uint8_t*)buffer, data_size, seed_vec);
         file_write.write(buffer, data_size);
         file_read.read(buffer, buff_size);
         data_size = file_read.gcount();
@@ -394,7 +328,7 @@ void AES_CBC::stream_decrypt_test(uint8_t *key, std::string &input_path, std::st
         std::memcpy(next_seed_vec, buffer + data_size - 16, 16);
     }
 
-    this->decrypt(key, (uint8_t*)buffer, key_size, data_size, seed_vec);
+    this->decrypt((uint8_t*)buffer, data_size, seed_vec);
     pad_size = buffer[data_size-1];
     file_write.write(buffer, data_size - pad_size);
 
@@ -403,20 +337,26 @@ void AES_CBC::stream_decrypt_test(uint8_t *key, std::string &input_path, std::st
     free(buffer);
 }
 
-void AES_CBC::stream_encrypt(uint8_t *key, std::fstream *stream_read, std::fstream *stream_write,
+void AES_CBC::stream_encrypt(uint8_t *key, std::ifstream *stream_read, std::ofstream *stream_write,
                              int key_size, const uint8_t *initialization_vector) {
-    uint8_t pad_size = 0;
-    uint16_t data_size = 0;
-    size_t buff_size = 4096;
+    uint8_t pad_size;
+    uint16_t data_size;
+    std::streamsize buff_size = 4096;
     char *buffer = (char*)malloc(buff_size);
+    if(buffer == nullptr) {
+        std::printf("Failed to allocate buffer memory.");
+        return;
+    }
     uint8_t seed_vec[16];
+
+    this->generate_key_schedule(key, key_size);
 
     std::memcpy(seed_vec, initialization_vector, 16);
 
     stream_read->read(buffer, buff_size);
     data_size = stream_read->gcount();
     while(!stream_read->eof()) {
-        this->encrypt(key, (uint8_t*)buffer, key_size, data_size, seed_vec);
+        this->encrypt((uint8_t*)buffer, data_size, seed_vec);
         std::memcpy(seed_vec, buffer + data_size - 16, 16);
         stream_write->write(buffer, data_size);
         stream_read->read(buffer, data_size);
@@ -425,20 +365,26 @@ void AES_CBC::stream_encrypt(uint8_t *key, std::fstream *stream_read, std::fstre
 
     pad_size = stream_read->gcount() % 16;
     std::memset(buffer + data_size, pad_size, pad_size);
-    this->encrypt(key, (uint8_t*)buffer, key_size, data_size + pad_size, seed_vec);
+    this->encrypt((uint8_t*)buffer, data_size + pad_size, seed_vec);
     stream_write->write(buffer, data_size + pad_size);
 
     free(buffer);
 }
 
-void AES_CBC::stream_decrypt(uint8_t *key, std::fstream *stream_read, std::fstream *stream_write,
+void AES_CBC::stream_decrypt(uint8_t *key, std::ifstream *stream_read, std::ofstream *stream_write,
                              int key_size, const uint8_t *initialization_vector) {
-    uint8_t pad_size = 0;
-    uint16_t data_size = 0;
-    size_t buff_size = 4096;
+    uint8_t pad_size;
+    uint16_t data_size;
+    std::streamsize buff_size = 4096;
     char *buffer = (char*)malloc(buff_size);
+    if(buffer == nullptr) {
+        std::printf("Failed to allocate buffer memory.");
+        return;
+    }
     uint8_t seed_vec[16];
     uint8_t next_seed_vec[16];
+
+    this->generate_key_schedule(key, key_size);
 
     std::memcpy(seed_vec, initialization_vector, 16);
     stream_read->read(buffer, buff_size);
@@ -446,7 +392,7 @@ void AES_CBC::stream_decrypt(uint8_t *key, std::fstream *stream_read, std::fstre
     std::memcpy(next_seed_vec, buffer + data_size - 16, 16);
 
     while(!stream_read->eof()) {
-        this->decrypt(key, (uint8_t*)buffer, key_size, data_size, seed_vec);
+        this->decrypt((uint8_t*)buffer, data_size, seed_vec);
         stream_write->write(buffer, data_size);
         stream_read->read(buffer, buff_size);
         data_size = stream_read->gcount();
@@ -454,7 +400,7 @@ void AES_CBC::stream_decrypt(uint8_t *key, std::fstream *stream_read, std::fstre
         std::memcpy(next_seed_vec, buffer + data_size - 16, 16);
     }
 
-    this->decrypt(key, (uint8_t*)buffer, key_size, data_size, seed_vec);
+    this->decrypt((uint8_t*)buffer, data_size, seed_vec);
     pad_size = buffer[data_size-1];
     stream_write->write(buffer, data_size - pad_size);
 
