@@ -2,21 +2,9 @@
 // Created by Nicho on 11/10/2023.
 //
 
-/*
-#include <memory>
-#include <algorithm>
-
-uint8_t gf_double(uint8_t num) {
-    return num << 1 ^ (num & 0x80 ? 0x1B : 0x00);
-}
-uint8_t gf_triple(uint8_t num) {
-    return gf_double(num) ^ num;
-}
- */
 #include "AES.h"
 
 #define ROTL8(x,shift) ((uint8_t) ((x) << (shift)) | ((x) >> (8 - (shift))))
-
 
 uint8_t gf_multiply(uint8_t num0, uint8_t num1) {
     uint8_t result = 0;
@@ -136,8 +124,6 @@ void AES::mix_step() {
     this->encrypted.swap(mixed);
 }
 
-// This step shits itself on round 8 for some unknown reason, but only if I use AES::encrypt() instead of manually re-writing
-// the function in main because yes
 void AES::key_step(int i) {
     for(int j = 0; j < 16; j++){
         this->encrypted[j] ^= this->schedule[j + 16 * i];
@@ -246,47 +232,3 @@ AES::AES() {
     this->key_size = 0;
     this->data_size = 0;
 }
-
-void AES::setData(uint8_t d[], int s) {
-    this->data = std::vector<uint8_t>(d, d + s / 8);
-    this->encrypted = std::vector<uint8_t>(d, d + s / 8);
-}
-
-void AES::setKey(uint8_t k[], int s) {
-    this->key = std::vector<uint8_t>(k, k + s / 8);
-}
-
-void AES::debugDecrypt() {
-    this->decrypted = std::vector<uint8_t>(this->encrypted);
-}
-
-/*
-    Generating keys
-	Start with 16 byte block in same format as the input data above
-	B00 B04 B08 B12
-	B01 B05 B09 B13
-	B02 B06 B10 B14
-	B03 B07 B11 B15
-	=>
-	W00 W01 W02 W03
-
-	four column vector words
-	W00 - W03 are XOR'd with the input before any processing
-
-	in decryption the last set of words is XOR'd first before using the remaining in reverse order
-	W_i = W_(i-1) XOR W_(i-4) if i % 4
-	else W_i = w_(i-4) XOR g(W_i-1)
-
-	g does the following
-	rotate left 1 byte
-	substitute each byte using table from subbyte step
-	XOR with round constant (round constant is in form ## 00 00 00)
-	## = RC[i]
-	RC[1] = 0x01
-	RC[n] = 0x02 x RC[n-1]
-
-
-	For 128-bit keys we expand the key 10 times to get 44 words (4 key len * 10 round num) easy and nice
-	for 192-bit keys, there are 12 rounds so we need 52 total words
-	for 256-bit keys, there are 14 rounds, so we need 60 total words
- */

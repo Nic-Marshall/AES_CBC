@@ -12,7 +12,7 @@
 
 # =============================================================================
 # Project: LearningProjects
-# Configurations: Debug
+# Configurations: Release
 # =============================================================================
 
 #############################################
@@ -24,7 +24,7 @@ ninja_required_version = 1.5
 #############################################
 # Set configuration variable for custom commands.
 
-CONFIGURATION = Debug
+CONFIGURATION = Release
 # =============================================================================
 # Include auxiliary files.
 
@@ -39,7 +39,7 @@ include CMakeFiles/rules.ninja
 #############################################
 # Logical path to working directory; prefix for absolute paths.
 
-cmake_ninja_workdir = C$:/Users/Nicho/CLionProjects/LearningProjects/cmake-build-debug/
+cmake_ninja_workdir = C$:/Users/Nicho/CLionProjects/LearningProjects/cmake-build-release/
 # =============================================================================
 # Object build statements for EXECUTABLE target LearningProjects
 
@@ -49,27 +49,27 @@ cmake_ninja_workdir = C$:/Users/Nicho/CLionProjects/LearningProjects/cmake-build
 
 build cmake_object_order_depends_target_LearningProjects: phony || CMakeFiles/LearningProjects.dir
 
-build CMakeFiles/LearningProjects.dir/main.cpp.obj: CXX_COMPILER__LearningProjects_unscanned_Debug C$:/Users/Nicho/CLionProjects/LearningProjects/main.cpp || cmake_object_order_depends_target_LearningProjects
+build CMakeFiles/LearningProjects.dir/main.cpp.obj: CXX_COMPILER__LearningProjects_unscanned_Release C$:/Users/Nicho/CLionProjects/LearningProjects/main.cpp || cmake_object_order_depends_target_LearningProjects
   DEP_FILE = CMakeFiles\LearningProjects.dir\main.cpp.obj.d
-  FLAGS = -g -std=gnu++23 -fdiagnostics-color=always
+  FLAGS = -O3 -DNDEBUG -std=gnu++23 -fdiagnostics-color=always
   OBJECT_DIR = CMakeFiles\LearningProjects.dir
   OBJECT_FILE_DIR = CMakeFiles\LearningProjects.dir
 
-build CMakeFiles/LearningProjects.dir/AES.cpp.obj: CXX_COMPILER__LearningProjects_unscanned_Debug C$:/Users/Nicho/CLionProjects/LearningProjects/AES.cpp || cmake_object_order_depends_target_LearningProjects
+build CMakeFiles/LearningProjects.dir/AES.cpp.obj: CXX_COMPILER__LearningProjects_unscanned_Release C$:/Users/Nicho/CLionProjects/LearningProjects/AES.cpp || cmake_object_order_depends_target_LearningProjects
   DEP_FILE = CMakeFiles\LearningProjects.dir\AES.cpp.obj.d
-  FLAGS = -g -std=gnu++23 -fdiagnostics-color=always
+  FLAGS = -O3 -DNDEBUG -std=gnu++23 -fdiagnostics-color=always
   OBJECT_DIR = CMakeFiles\LearningProjects.dir
   OBJECT_FILE_DIR = CMakeFiles\LearningProjects.dir
 
-build CMakeFiles/LearningProjects.dir/AES_FASTER.cpp.obj: CXX_COMPILER__LearningProjects_unscanned_Debug C$:/Users/Nicho/CLionProjects/LearningProjects/AES_FASTER.cpp || cmake_object_order_depends_target_LearningProjects
+build CMakeFiles/LearningProjects.dir/AES_FASTER.cpp.obj: CXX_COMPILER__LearningProjects_unscanned_Release C$:/Users/Nicho/CLionProjects/LearningProjects/AES_FASTER.cpp || cmake_object_order_depends_target_LearningProjects
   DEP_FILE = CMakeFiles\LearningProjects.dir\AES_FASTER.cpp.obj.d
-  FLAGS = -g -std=gnu++23 -fdiagnostics-color=always
+  FLAGS = -O3 -DNDEBUG -std=gnu++23 -fdiagnostics-color=always
   OBJECT_DIR = CMakeFiles\LearningProjects.dir
   OBJECT_FILE_DIR = CMakeFiles\LearningProjects.dir
 
-build CMakeFiles/LearningProjects.dir/time_accumulator.cpp.obj: CXX_COMPILER__LearningProjects_unscanned_Debug C$:/Users/Nicho/CLionProjects/LearningProjects/time_accumulator.cpp || cmake_object_order_depends_target_LearningProjects
+build CMakeFiles/LearningProjects.dir/time_accumulator.cpp.obj: CXX_COMPILER__LearningProjects_unscanned_Release C$:/Users/Nicho/CLionProjects/LearningProjects/time_accumulator.cpp || cmake_object_order_depends_target_LearningProjects
   DEP_FILE = CMakeFiles\LearningProjects.dir\time_accumulator.cpp.obj.d
-  FLAGS = -g -std=gnu++23 -fdiagnostics-color=always
+  FLAGS = -O3 -DNDEBUG -std=gnu++23 -fdiagnostics-color=always
   OBJECT_DIR = CMakeFiles\LearningProjects.dir
   OBJECT_FILE_DIR = CMakeFiles\LearningProjects.dir
 
@@ -81,8 +81,8 @@ build CMakeFiles/LearningProjects.dir/time_accumulator.cpp.obj: CXX_COMPILER__Le
 #############################################
 # Link the executable LearningProjects.exe
 
-build LearningProjects.exe: CXX_EXECUTABLE_LINKER__LearningProjects_Debug CMakeFiles/LearningProjects.dir/main.cpp.obj CMakeFiles/LearningProjects.dir/AES.cpp.obj CMakeFiles/LearningProjects.dir/AES_FASTER.cpp.obj CMakeFiles/LearningProjects.dir/time_accumulator.cpp.obj
-  FLAGS = -g
+build LearningProjects.exe: CXX_EXECUTABLE_LINKER__LearningProjects_Release CMakeFiles/LearningProjects.dir/main.cpp.obj CMakeFiles/LearningProjects.dir/AES.cpp.obj CMakeFiles/LearningProjects.dir/AES_FASTER.cpp.obj CMakeFiles/LearningProjects.dir/time_accumulator.cpp.obj
+  FLAGS = -O3 -DNDEBUG
   LINK_LIBRARIES = -lkernel32 -luser32 -lgdi32 -lwinspool -lshell32 -lole32 -loleaut32 -luuid -lcomdlg32 -ladvapi32
   OBJECT_DIR = CMakeFiles\LearningProjects.dir
   POST_BUILD = cd .
@@ -96,7 +96,7 @@ build LearningProjects.exe: CXX_EXECUTABLE_LINKER__LearningProjects_Debug CMakeF
 # Utility command for edit_cache
 
 build CMakeFiles/edit_cache.util: CUSTOM_COMMAND
-  COMMAND = C:\Windows\system32\cmd.exe /C "cd /D C:\Users\Nicho\CLionProjects\LearningProjects\cmake-build-debug && "C:\Users\Nicho\AppData\Local\JetBrains\CLion 2023.3.3\bin\cmake\win\x64\bin\cmake.exe" -E echo "No interactive CMake dialog available.""
+  COMMAND = C:\Windows\system32\cmd.exe /C "cd /D C:\Users\Nicho\CLionProjects\LearningProjects\cmake-build-release && "C:\Users\Nicho\AppData\Local\JetBrains\CLion 2023.3.3\bin\cmake\win\x64\bin\cmake.exe" -E echo "No interactive CMake dialog available.""
   DESC = No interactive CMake dialog available...
   restat = 1
 
@@ -107,7 +107,7 @@ build edit_cache: phony CMakeFiles/edit_cache.util
 # Utility command for rebuild_cache
 
 build CMakeFiles/rebuild_cache.util: CUSTOM_COMMAND
-  COMMAND = C:\Windows\system32\cmd.exe /C "cd /D C:\Users\Nicho\CLionProjects\LearningProjects\cmake-build-debug && "C:\Users\Nicho\AppData\Local\JetBrains\CLion 2023.3.3\bin\cmake\win\x64\bin\cmake.exe" --regenerate-during-build -SC:\Users\Nicho\CLionProjects\LearningProjects -BC:\Users\Nicho\CLionProjects\LearningProjects\cmake-build-debug"
+  COMMAND = C:\Windows\system32\cmd.exe /C "cd /D C:\Users\Nicho\CLionProjects\LearningProjects\cmake-build-release && "C:\Users\Nicho\AppData\Local\JetBrains\CLion 2023.3.3\bin\cmake\win\x64\bin\cmake.exe" --regenerate-during-build -SC:\Users\Nicho\CLionProjects\LearningProjects -BC:\Users\Nicho\CLionProjects\LearningProjects\cmake-build-release"
   DESC = Running CMake to regenerate build system...
   pool = console
   restat = 1
@@ -125,7 +125,7 @@ build LearningProjects: phony LearningProjects.exe
 # =============================================================================
 
 #############################################
-# Folder: C:/Users/Nicho/CLionProjects/LearningProjects/cmake-build-debug
+# Folder: C:/Users/Nicho/CLionProjects/LearningProjects/cmake-build-release
 
 build all: phony LearningProjects.exe
 

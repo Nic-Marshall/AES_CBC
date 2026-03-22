@@ -1,0 +1,19 @@
+# ninja log v5
+12	1654	7958526875505883	CMakeFiles/LearningProjects.dir/AES_FASTER.cpp.obj	25496452c21905fe
+4	252	7959091574372573	build.ninja	d161b8d44e825a66
+98	1990	7957468749585065	CMakeFiles/LearningProjects.dir/AES.cpp.obj	36a5558d58d01c3e
+15	2420	7958509013128063	CMakeFiles/LearningProjects.dir/main.cpp.obj	64d40525fbbf8fa9
+1655	1825	7958526877171423	LearningProjects.exe	e5a4e9c38630816
+1571	3037	7957468760122719	CMakeFiles/LearningProjects.dir/time_accumulator.cpp.obj	993ed9b0d5650c88
+13	2199	7959094202236938	CMakeFiles/LearningProjects.dir/main.cpp.obj	64d40525fbbf8fa9
+2200	2443	7959094204640310	LearningProjects.exe	e5a4e9c38630816
+25	1660	7959109881755486	CMakeFiles/LearningProjects.dir/AES_FASTER.cpp.obj	25496452c21905fe
+14	2261	7959109887789362	CMakeFiles/LearningProjects.dir/main.cpp.obj	64d40525fbbf8fa9
+2261	2437	7959109889504771	LearningProjects.exe	e5a4e9c38630816
+21	1392	7959111387523283	CMakeFiles/LearningProjects.dir/AES_FASTER.cpp.obj	25496452c21905fe
+11	1948	7959111393088407	CMakeFiles/LearningProjects.dir/main.cpp.obj	64d40525fbbf8fa9
+1948	2086	7959111394424827	LearningProjects.exe	e5a4e9c38630816
+16	2001	7959116512363549	CMakeFiles/LearningProjects.dir/main.cpp.obj	64d40525fbbf8fa9
+2001	2169	7959116513996004	LearningProjects.exe	e5a4e9c38630816
+11	2368	7959116880079498	CMakeFiles/LearningProjects.dir/main.cpp.obj	64d40525fbbf8fa9
+2369	2508	7959116881455817	LearningProjects.exe	e5a4e9c38630816
