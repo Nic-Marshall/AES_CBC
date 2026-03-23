@@ -2,7 +2,7 @@
 // Created by Nicho on 1/24/2024.
 //
 
-#include "time_accumulator.h"
+#include "../include/time_accumulator.h"
 #include <cstdio>
 
 void time_accumulator::timer_start_timing() {

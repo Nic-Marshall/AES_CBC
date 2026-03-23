@@ -2,13 +2,13 @@
 // Created by Nic on 1/18/2024.
 //
 
-#include "AES_CBC.h"
+#include "../include/AES_CBC.h"
 #include <algorithm>
 #include <fstream>
 #include <cstring>
 
-#define ROTL8(x, shift) ((uint8_t) ((x) << (shift)) | ((x) >> (8 - (shift))))
-
+//#define ROTL8(x, shift) ((uint8_t) ((x) << (shift)) | ((x) >> (8 - (shift))))
+inline uint8_t ROTL8(uint8_t x, uint8_t shift) {return (x << shift) | (x >> (8 - shift));}
 //  Lookup tables
 uint8_t AES_CBC::lt_times_2[256];
 uint8_t AES_CBC::lt_times_3[256];
@@ -251,92 +251,6 @@ void AES_CBC::step_add_key_inv(cipher_block *block_start, int round) {
     *block_start ^= *(this->schedule_block  + this->schedule_size / 4 - round - 1);
 }
 
-void AES_CBC::stream_encrypt_test(uint8_t *key, std::string &input_path, std::string &output_path,
-                                  int key_size, const uint8_t *initialization_vector) {
-    std::fstream file_read;
-    std::fstream file_write;
-    uint8_t pad_size;
-    uint16_t data_size;
-    std::streamsize buff_size = 4096;
-    char *buffer = (char*)malloc(buff_size);
-    if(buffer == nullptr) {
-        std::printf("Failed to allocate buffer memory.");
-        return;
-    }
-    uint8_t seed_vec[16];
-
-    this->generate_key_schedule(key, key_size);
-
-    std::memcpy(seed_vec, initialization_vector, 16);
-
-    file_read.open(input_path, std::ios::binary | std::ios::in);
-    file_write.open(output_path, std::ios::out | std::ios::binary);
-
-    file_read.read(buffer, buff_size);
-    data_size = file_read.gcount();
-
-    while(!file_read.eof()) {
-        this->encrypt((uint8_t*)buffer, data_size, seed_vec);
-        std::memcpy(seed_vec, buffer + data_size - 16, 16);
-        file_write.write(buffer, data_size);
-        file_read.read(buffer, data_size);
-        data_size = file_read.gcount();
-    }
-
-    pad_size = file_write.gcount() % 16;
-    std::memset(buffer + data_size, pad_size, pad_size);
-    this->encrypt((uint8_t*)buffer, data_size + pad_size, seed_vec);
-    file_write.write(buffer, data_size + pad_size);
-
-    file_read.close();
-    file_write.close();
-    free(buffer);
-}
-
-void AES_CBC::stream_decrypt_test(uint8_t *key, std::string &input_path, std::string &output_path,
-                                  int key_size, const uint8_t *initialization_vector) {
-    std::fstream file_read;
-    std::fstream file_write;
-    uint8_t pad_size;
-    uint16_t data_size;
-    std::streamsize buff_size = 4096;
-    char *buffer = (char*)malloc(buff_size);
-    if(buffer == nullptr) {
-        std::printf("Failed to allocate buffer memory.");
-        return;
-    }
-    uint8_t seed_vec[16];
-    uint8_t next_seed_vec[16];
-
-    this->generate_key_schedule(key, key_size);
-
-    std::memcpy(seed_vec, initialization_vector, 16);
-
-    file_read.open(input_path, std::ios::binary | std::ios::in);
-    file_write.open(output_path, std::ios::out | std::ios::binary);
-
-    file_read.read(buffer, buff_size);
-    data_size = file_read.gcount();
-    std::memcpy(next_seed_vec, buffer + data_size - 16, 16);
-
-    while(!file_read.eof()) {
-        this->decrypt((uint8_t*)buffer, data_size, seed_vec);
-        file_write.write(buffer, data_size);
-        file_read.read(buffer, buff_size);
-        data_size = file_read.gcount();
-        std::swap(seed_vec, next_seed_vec);
-        std::memcpy(next_seed_vec, buffer + data_size - 16, 16);
-    }
-
-    this->decrypt((uint8_t*)buffer, data_size, seed_vec);
-    pad_size = buffer[data_size-1];
-    file_write.write(buffer, data_size - pad_size);
-
-    file_read.close();
-    file_write.close();
-    free(buffer);
-}
-
 void AES_CBC::stream_encrypt(uint8_t *key, std::ifstream *stream_read, std::ofstream *stream_write,
                              int key_size, const uint8_t *initialization_vector) {
     uint8_t pad_size;
@@ -364,6 +278,8 @@ void AES_CBC::stream_encrypt(uint8_t *key, std::ifstream *stream_read, std::ofst
     }
 
     pad_size = stream_read->gcount() % 16;
+    if(pad_size == 0)
+        pad_size = 16;
     std::memset(buffer + data_size, pad_size, pad_size);
     this->encrypt((uint8_t*)buffer, data_size + pad_size, seed_vec);
     stream_write->write(buffer, data_size + pad_size);

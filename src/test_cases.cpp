@@ -5,7 +5,7 @@
 #include <iostream>
 #include <fstream>
 #include <chrono>
-#include "AES_CBC/AES_CBC.h"
+#include "../include/AES_CBC.h"
 
 #define BPMS_TO_MBPS (1000000 / 1048576)
 /*
@@ -14,22 +14,22 @@
 void aes_validation() {
     AES_CBC aes = AES_CBC();
 
-    uint8_t data[] = {0x00, 0x01, 0x02, 0x03,
-                      0x04, 0x05, 0x06, 0x07,
-                      0x08, 0x09, 0x10, 0x11,
-                      0x12, 0x13, 0x14, 0x15};
-    uint8_t data2[] = {0x00, 0x01, 0x02, 0x03,
+    uint8_t data0[] = {0x00, 0x01, 0x02, 0x03,
                        0x04, 0x05, 0x06, 0x07,
                        0x08, 0x09, 0x10, 0x11,
                        0x12, 0x13, 0x14, 0x15};
-    uint8_t data2b[] = {0x00, 0x01, 0x02, 0x03,
-                        0x04, 0x05, 0x06, 0x07,
-                        0x08, 0x09, 0x10, 0x11,
-                        0x12, 0x13, 0x14, 0x15,
-                        0x16, 0x17, 0x18, 0x19,
-                        0x20, 0x21, 0x22, 0x23,
-                        0x14, 0x25, 0x26, 0x27,
-                        0x28, 0x29, 0x30, 0x31};
+    uint8_t data1[] = {0x00, 0x01, 0x02, 0x03,
+                       0x04, 0x05, 0x06, 0x07,
+                       0x08, 0x09, 0x10, 0x11,
+                       0x12, 0x13, 0x14, 0x15};
+    uint8_t data2[] = {0x00, 0x01, 0x02, 0x03,
+                       0x04, 0x05, 0x06, 0x07,
+                       0x08, 0x09, 0x10, 0x11,
+                       0x12, 0x13, 0x14, 0x15,
+                       0x16, 0x17, 0x18, 0x19,
+                       0x20, 0x21, 0x22, 0x23,
+                       0x14, 0x25, 0x26, 0x27,
+                       0x28, 0x29, 0x30, 0x31};
     uint8_t data3[] = {0x00, 0x01, 0x02, 0x03,
                        0x04, 0x05, 0x06, 0x07,
                        0x08, 0x09, 0x10, 0x11,
@@ -39,15 +39,15 @@ void aes_validation() {
                        0x14, 0x25, 0x26, 0x27,
                        0x28, 0x29, 0x30, 0x31};
 
-    uint8_t key[] = {0x15, 0x14, 0x13, 0x12,
-                     0x11, 0x10, 0x09, 0x08,
-                     0x07, 0x06, 0x05, 0x04,
-                     0x03, 0x02, 0x01, 0x00};
-    uint8_t key2[] = {0x15, 0x14, 0x13, 0x12,
+    uint8_t key0[] = {0x15, 0x14, 0x13, 0x12,
                       0x11, 0x10, 0x09, 0x08,
                       0x07, 0x06, 0x05, 0x04,
                       0x03, 0x02, 0x01, 0x00};
-    uint8_t key3[] = {0x15, 0x14, 0x13, 0x12,
+    uint8_t key1[] = {0x15, 0x14, 0x13, 0x12,
+                      0x11, 0x10, 0x09, 0x08,
+                      0x07, 0x06, 0x05, 0x04,
+                      0x03, 0x02, 0x01, 0x00};
+    uint8_t key2[] = {0x15, 0x14, 0x13, 0x12,
                       0x11, 0x10, 0x09, 0x08,
                       0x07, 0x06, 0x05, 0x04,
                       0x03, 0x02, 0x01, 0x00};
@@ -57,8 +57,8 @@ void aes_validation() {
                           0x19, 0x20, 0x21, 0x22,
                           0x23, 0x24, 0x25, 0x26};
 
-    aes.encrypt(key, data, sizeof(key), sizeof(data), seed_vec);
-    aes.decrypt(key2, data2b, sizeof(key2), sizeof(data2b), seed_vec);
+    aes.encrypt(key0, data0, sizeof(key0), sizeof(data0), seed_vec);
+    aes.decrypt(key1, data2, sizeof(key1), sizeof(data2), seed_vec);
 
     int debug = 0;
 }
@@ -150,11 +150,21 @@ void streamtest() {
 
     AES_CBC aes = AES_CBC();
 
+    std::ifstream input_plaintext, input_ciphertext;
+    std::ofstream output_ciphertext, output_plaintext;
 
     auto pre_encrypt = std::chrono::high_resolution_clock::now();
-    aes.stream_encrypt_test(key, filepath, encrypted_path, sizeof(key), key);
+    input_plaintext.open(filepath, std::ios::in | std::ios::binary);
+    output_ciphertext.open(encrypted_path, std::ios::out | std::ios::binary);
+    aes.stream_encrypt(key, &input_plaintext, &output_ciphertext, sizeof(key), key);
+    input_plaintext.close();
+    output_ciphertext.close();
     auto post_encrypt = std::chrono::high_resolution_clock::now();
-    aes.stream_decrypt_test(key, encrypted_path, decrypted_path, sizeof(key), key);
+    input_ciphertext.open(encrypted_path, std::ios::in | std::ios::binary);
+    output_plaintext.open(decrypted_path, std::ios::out | std::ios::binary);
+    aes.stream_decrypt(key, &input_ciphertext, &output_plaintext, sizeof(key), key);
+    input_ciphertext.close();
+    output_plaintext.close();
     auto post_decrypt = std::chrono::high_resolution_clock::now();
 
     auto file_encrypt_time = std::chrono::duration_cast<std::chrono::microseconds>(post_encrypt - pre_encrypt);

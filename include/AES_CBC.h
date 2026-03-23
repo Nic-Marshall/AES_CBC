@@ -67,10 +67,7 @@ public:
     void decrypt(uint8_t *key, uint8_t *data_,
                  int key_size, unsigned long data_size, const uint8_t *seed_vec);
     void decrypt(uint8_t *data_, unsigned long data_size, const uint8_t *seed_vec);
-    void stream_encrypt_test(uint8_t *key, std::string &input_path, std::string &output_path,
-                                    int key_size, const uint8_t *initialization_vector);
-    void stream_decrypt_test(uint8_t *key, std::string &input_path, std::string &output_path,
-                        int key_size, const uint8_t *initialization_vector);
+
     void generate_key_schedule(const uint8_t *key, int key_size);
     void stream_decrypt(uint8_t *key, std::ifstream *stream_read, std::ofstream *stream_write,
                         int key_size, const uint8_t *initialization_vector);

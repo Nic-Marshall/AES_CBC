@@ -1,7 +1,7 @@
 #include <iostream>
 #include <fstream>
 #include <chrono>
-#include "AES_CBC/AES_CBC.h"
+#include "../include/AES_CBC.h"
 
 // Bytes per millisecond to megabytes per second
 #define BPMS_TO_MBPS (1000000 / 1048576)
